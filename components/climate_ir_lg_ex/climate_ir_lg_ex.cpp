@@ -206,7 +206,7 @@ void LgIrClimateEx::transmit_state() {
     {
       int32_t in_byte = bit_to_flip_ / 8;
       uint8_t flip_mask = 1U << (bit_to_flip_ % 8);
-      if (in_byte >= 0 && in_byte <= sizeof(remote_state))
+      if (bit_to_flip_ >= 0 && in_byte <= sizeof(remote_state))
       {
         remote_state.raw[in_byte] ^= flip_mask;
         ESP_LOGD(TAG, "Flipping bit %d (bit %d in byte %d)", bit_to_flip_, (bit_to_flip_ % 8), in_byte);
@@ -214,8 +214,18 @@ void LgIrClimateEx::transmit_state() {
     }
 
     calc_checksum_(remote_state.raw);
+
+    char buffer[50];
+    std::string output;
+    for (int i = 0; i < FRAME_SIZE; ++i) {
+      snprintf(buffer, sizeof(buffer), " %02x", remote_state.raw[i]);
+      output += std::string(buffer);
+    }
+    ESP_LOGD(TAG, "calculated climate_ir_lg_ex state: %s", output.c_str());
+
     transmit_(remote_state.raw);
     this->publish_state();
+
 }
 
 bool LgIrClimateEx::on_receive(remote_base::RemoteReceiveData data) {
@@ -310,7 +320,7 @@ void LgIrClimateEx::transmit_(const uint8_t* data) {
         snprintf(buffer, sizeof(buffer), " %02x", data[i]);
         output += std::string(buffer);
     }
-    ESP_LOGD(TAG, "Sending climate_ir_lg_ex state: %s", output.c_str());
+    ESP_LOGD(TAG, "transmit climate_ir_lg_ex state: %s", output.c_str());
 
     auto transmit = this->transmitter_->transmit();
     auto *transmit_data = transmit.get_data();

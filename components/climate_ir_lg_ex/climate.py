@@ -15,9 +15,8 @@ CONF_BIT_ONE_LOW = "bit_one_low"
 CONF_BIT_ZERO_LOW = "bit_zero_low"
 CONF_FLIP_BIT = "flip_bit_num"
 
-CONFIG_SCHEMA = climate_ir.CLIMATE_IR_WITH_RECEIVER_SCHEMA.extend(
+CONFIG_SCHEMA = climate_ir.climate_ir_with_receiver_schema(LgIrClimateEx).extend(
     {
-        cv.GenerateID(): cv.declare_id(LgIrClimateEx),
         cv.Optional(
             CONF_HEADER_HIGH, default="3100us"
         ): cv.positive_time_period_microseconds,
@@ -41,8 +40,7 @@ CONFIG_SCHEMA = climate_ir.CLIMATE_IR_WITH_RECEIVER_SCHEMA.extend(
 
 
 async def to_code(config):
-    var = cg.new_Pvariable(config[CONF_ID])
-    await climate_ir.register_climate_ir(var, config)
+    var = await climate_ir.new_climate_ir(config)
 
     cg.add(var.set_header_high(config[CONF_HEADER_HIGH]))
     cg.add(var.set_header_low(config[CONF_HEADER_LOW]))
